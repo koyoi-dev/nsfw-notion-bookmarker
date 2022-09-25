@@ -1,14 +1,33 @@
 // src/pages/_app.tsx
+import { MantineProvider } from '@mantine/core';
 import { httpBatchLink } from '@trpc/client/links/httpBatchLink';
 import { loggerLink } from '@trpc/client/links/loggerLink';
 import { withTRPC } from '@trpc/next';
 import type { AppType } from 'next/dist/shared/lib/utils';
 import superjson from 'superjson';
 import type { AppRouter } from '../server/router';
-import '../styles/globals.css';
 
 const MyApp: AppType = ({ Component, pageProps }) => {
-  return <Component {...pageProps} />;
+  return (
+    <MantineProvider
+      withGlobalStyles
+      withNormalizeCSS
+      theme={{
+        /** Put your mantine theme override here */
+        colorScheme: 'dark',
+        /** Breakpoints follow tailwindcss convention */
+        breakpoints: {
+          xs: 500,
+          sm: 640,
+          md: 768,
+          lg: 1024,
+          xl: 1280,
+        },
+      }}
+    >
+      <Component {...pageProps} />
+    </MantineProvider>
+  );
 };
 
 const getBaseUrl = () => {
