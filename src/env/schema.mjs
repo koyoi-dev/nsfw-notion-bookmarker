@@ -7,6 +7,8 @@ import { z } from 'zod';
  */
 export const serverSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']),
+  NOTION_TOKEN: z.string(),
+  NOTION_NHENTAI_DATABASE_ID: z.string(),
 });
 
 /**

@@ -13,6 +13,7 @@ import { NextLink } from '@mantine/next';
 import { IconBooks, IconMovie, IconWoman } from '@tabler/icons';
 import { useRouter } from 'next/router';
 import type { ReactNode } from 'react';
+import { ReactQueryDevtools } from 'react-query/devtools';
 
 type LayoutProps = {
   children: ReactNode;
@@ -25,6 +26,9 @@ export default function Layout({ children }: LayoutProps) {
       <main>
         <Container py='lg'>{children}</Container>
       </main>
+      {process.env.NODE_ENV !== 'production' && (
+        <ReactQueryDevtools initialIsOpen={false} />
+      )}
     </>
   );
 }

@@ -1,5 +1,6 @@
 // src/pages/_app.tsx
 import { MantineProvider } from '@mantine/core';
+import { NotificationsProvider } from '@mantine/notifications';
 import { httpBatchLink } from '@trpc/client/links/httpBatchLink';
 import { loggerLink } from '@trpc/client/links/loggerLink';
 import { withTRPC } from '@trpc/next';
@@ -25,7 +26,9 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         },
       }}
     >
-      <Component {...pageProps} />
+      <NotificationsProvider>
+        <Component {...pageProps} />
+      </NotificationsProvider>
     </MantineProvider>
   );
 };
