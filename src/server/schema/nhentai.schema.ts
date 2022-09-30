@@ -1,4 +1,4 @@
-import { group, omit, partial, select } from 'radash';
+import { omit, select } from 'radash';
 import { z } from 'zod';
 
 const NHENTAI_GALLERY_URL = 'http://i.nhentai.net/galleries';
@@ -33,58 +33,37 @@ const doujinTagsSchema = z
   .transform((tags) => ({
     artist: select(
       tags,
-      (tag) => {
-        const { type, ...rest } = tag;
-        return rest;
-      },
+      (tag) => omit(tag, ['type']),
       (tag) => tag.type === 'artist'
     ),
     character: select(
       tags,
-      (tag) => {
-        const { type, ...rest } = tag;
-        return rest;
-      },
+      (tag) => omit(tag, ['type']),
       (tag) => tag.type === 'character'
     ),
     group: select(
       tags,
-      (tag) => {
-        const { type, ...rest } = tag;
-        return rest;
-      },
+      (tag) => omit(tag, ['type']),
       (tag) => tag.type === 'group'
     ),
     language: select(
       tags,
-      (tag) => {
-        const { type, ...rest } = tag;
-        return rest;
-      },
+      (tag) => omit(tag, ['type']),
       (tag) => tag.type === 'language'
     ),
     category: select(
       tags,
-      (tag) => {
-        const { type, ...rest } = tag;
-        return rest;
-      },
+      (tag) => omit(tag, ['type']),
       (tag) => tag.type === 'category'
     ),
     parody: select(
       tags,
-      (tag) => {
-        const { type, ...rest } = tag;
-        return rest;
-      },
+      (tag) => omit(tag, ['type']),
       (tag) => tag.type === 'parody'
     ),
     tag: select(
       tags,
-      (tag) => {
-        const { type, ...rest } = tag;
-        return rest;
-      },
+      (tag) => omit(tag, ['type']),
       (tag) => tag.type === 'tag'
     ),
   }));

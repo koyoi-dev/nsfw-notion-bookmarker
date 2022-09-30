@@ -19,6 +19,8 @@ export const useQuerySearch = (initialValue = '') => {
         },
       });
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   return [value, setValue] as const;
