@@ -7,7 +7,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "format": "prettier --write .",
-    "start": "next start"
+    "start": "next start -p 4222"
   },
   "dependencies": {
     "@emotion/react": "^11.10.4",
