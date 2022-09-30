@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import dayjs from '../../utils/dayjs';
 
+export const BASE_URL = 'https://vje2ck1u.directus.app';
+
 const TwitterSchema = z
   .string()
   .url()
@@ -46,8 +48,8 @@ export const JavActressSchema = z.object({
   thumbnail: z
     .string()
     .uuid()
-    .transform((val) => `https://vje2ck1u.directus.app/assets/${val}`)
-    .refine((val) => val.startsWith('https://vje2ck1u.directus.app/assets/'))
+    .transform((val) => `${BASE_URL}/assets/${val}`)
+    .refine((val) => val.startsWith(`${BASE_URL}/assets/`))
     .nullable(),
   twitter: TwitterSchema,
   instagram: InstagramSchema,

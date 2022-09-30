@@ -1,9 +1,12 @@
-import axios from 'axios';
 import { z } from 'zod';
-import { JavActressSchema } from '../schema/jav-actress.schema';
-import { saveActress } from '../services/notion';
+import { env } from '../../env/server.mjs';
+import { getActress, getAllActress } from '../services/fetcher/jav-actress';
+import { JavActressService } from '../services/notion/jav-actress';
 import { createRouter } from './context';
-import { getActress as getNotionActress } from '../services/notion';
+
+const notionJavActress = new JavActressService(
+  env.NOTION_JAVACTRESS_DATABASE_ID
+);
 
 export const javActressRouter = createRouter()
   .query('search', {
@@ -37,7 +40,7 @@ export const javActressRouter = createRouter()
     async resolve({ input: { slug } }) {
       const actress = await getActress(slug);
 
-      const notionActress = await getNotionActress(slug);
+      const notionActress = await notionJavActress.get(slug);
 
       return {
         ...actress,
@@ -52,7 +55,7 @@ export const javActressRouter = createRouter()
     async resolve({ input: { slug } }) {
       const actress = await getActress(slug);
 
-      const notionActress = await saveActress({
+      const notionActress = await notionJavActress.save({
         slug: actress.slug,
         name: actress.name,
         japanese: actress.japanese,
@@ -74,57 +77,3 @@ export const javActressRouter = createRouter()
       };
     },
   });
-
-const GetAllActressSchema = z.object({
-  data: z.array(
-    JavActressSchema.pick({
-      slug: true,
-      name: true,
-      japanese: true,
-      thumbnail: true,
-    })
-  ),
-  meta: z.object({
-    filter_count: z.number(),
-  }),
-});
-const getAllActress = async ({
-  limit,
-  page,
-  query,
-}: {
-  limit: number;
-  query: string;
-  page: number;
-}) => {
-  const { data: directus } = await axios.get(
-    'https://vje2ck1u.directus.app/items/actresses',
-    {
-      params: {
-        limit,
-        meta: 'filter_count',
-        offset: limit * (page - 1),
-        sort: ['name'],
-        fields: ['slug', 'name', 'japanese', 'thumbnail'],
-        ...(query && {
-          filter: {
-            _or: [
-              { name: { _contains: query } },
-              { japanese: { _contains: query } },
-            ],
-          },
-        }),
-      },
-    }
-  );
-
-  return GetAllActressSchema.parse({ ...directus });
-};
-
-const getActress = async (slug: string) => {
-  const { data: directus } = await axios.get(
-    `https://vje2ck1u.directus.app/items/actresses/${slug}`
-  );
-
-  return JavActressSchema.parse(directus.data);
-};
