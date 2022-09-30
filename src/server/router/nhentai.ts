@@ -1,13 +1,9 @@
-import { TRPCError } from '@trpc/server';
-import axios from 'axios';
-import { select, tryit } from 'radash';
+import { select } from 'radash';
 import { z } from 'zod';
-import { APIDoujinId, Doujin } from '../schema/doujin.schema';
-import { getDoujin, saveDoujin } from '../services/notion';
+import { doujinIdSchema } from '../schema/nhentai.schema';
+import { getAllDoujins, getDoujin } from '../services/fetcher/nhentai';
+import { getDoujin as getNotionDoujin, saveDoujin } from '../services/notion';
 import { createRouter } from './context';
-
-// FIXME: move to a separate file
-const NHENTAI_IP = 'http://138.2.77.198:3002';
 
 export const nhentaiRouter = createRouter()
   .query('search', {
@@ -20,42 +16,31 @@ export const nhentaiRouter = createRouter()
         .default('popular-today'),
     }),
     async resolve({ input: { query, sort, cursor } }) {
-      const [err, res] = await tryit(axios.get<any>)(
-        `${NHENTAI_IP}/api/galleries/search`,
-        {
-          params: {
-            query,
-            page: cursor,
-            sort,
-          },
-        }
-      );
+      const { result: doujins, num_pages } = await getAllDoujins({
+        query,
+        page: cursor,
+        sort,
+      });
 
-      if (err) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch data from nhentai',
-          cause: err,
-        });
-      }
+      const result = doujins.map((doujin) => {
+        const isTranslated = doujin.tags.language.some(
+          (v) => v.name === 'translated'
+        );
 
-      const { result: doujins, num_pages } = z
-        .object({
-          result: z.array(Doujin),
-          num_pages: z.number(),
-        })
-        .parse(res.data);
-
-      const result = doujins.map((doujin) => ({
-        id: doujin.id,
-        title: doujin.title,
-        cover: doujin.images.cover,
-        language: select(
-          doujin.tags.language || [],
-          (lang) => lang.name,
-          (lang) => lang.name !== 'translated'
-        )[0],
-      }));
+        return {
+          id: doujin.id,
+          title: doujin.title,
+          cover: doujin.images.cover,
+          language: select(
+            doujin.tags.language,
+            (tag) => tag.name,
+            (tag) =>
+              isTranslated
+                ? tag.name !== 'translated' && tag.name !== 'japanese'
+                : !!tag.name
+          ),
+        };
+      });
 
       let nextCursor: typeof cursor | undefined = undefined;
       if (num_pages > cursor) {
@@ -70,26 +55,11 @@ export const nhentaiRouter = createRouter()
   })
   .query('get', {
     input: z.object({
-      id: APIDoujinId,
+      id: doujinIdSchema,
     }),
-    async resolve({ input }) {
-      const nhentaiId = input.id;
-
-      const [err, res] = await tryit(axios.get<any>)(
-        `${NHENTAI_IP}/api/gallery/${nhentaiId}`
-      );
-
-      if (err) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch doujin with id ' + nhentaiId,
-          cause: err.message,
-        });
-      }
-
-      const doujin = Doujin.parse(res.data);
-
-      const notion = await getDoujin(nhentaiId);
+    async resolve({ input: { id } }) {
+      const doujin = await getDoujin(id);
+      const notion = await getNotionDoujin(id);
 
       return {
         ...doujin,
@@ -99,24 +69,10 @@ export const nhentaiRouter = createRouter()
   })
   .mutation('save', {
     input: z.object({
-      id: APIDoujinId,
+      id: doujinIdSchema,
     }),
-    async resolve({ input }) {
-      const nhentaiId = input.id;
-
-      const [err, res] = await tryit(axios.get<any>)(
-        `${NHENTAI_IP}/api/gallery/${nhentaiId}`
-      );
-
-      if (err) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to fetch doujin with id ' + nhentaiId,
-          cause: err.message,
-        });
-      }
-
-      const doujin = Doujin.parse(res.data);
+    async resolve({ input: { id } }) {
+      const doujin = await getDoujin(id);
 
       const title =
         doujin.title.pretty ||
@@ -124,16 +80,16 @@ export const nhentaiRouter = createRouter()
         doujin.title.japanese ||
         'No Title';
 
-      const authors = doujin.tags.artist?.map((artist) => ({
+      const authors = doujin.tags.artist.map((artist) => ({
         name: artist.name,
       }));
-      const languages = doujin.tags.language?.map((language) => ({
+      const languages = doujin.tags.language.map((language) => ({
         name: language.name,
       }));
 
       const notionDoujin = await saveDoujin({
         title,
-        id: nhentaiId,
+        id: doujin.id,
         thumbnail: doujin.images.cover,
         authors,
         languages,

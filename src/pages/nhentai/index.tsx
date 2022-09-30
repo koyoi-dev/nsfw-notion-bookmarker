@@ -3,6 +3,7 @@ import {
   BadgeProps,
   Box,
   Button,
+  Group,
   Paper,
   SimpleGrid,
   Skeleton,
@@ -11,22 +12,17 @@ import {
   Title,
   useMantineTheme,
 } from '@mantine/core';
-import NextImage from 'next/image';
-import { useDebouncedState } from '@mantine/hooks';
-import { IconSearch } from '@tabler/icons';
-import Layout from '../../components/Layout';
-import { trpc } from '../../utils/trpc';
 import { NextLink } from '@mantine/next';
-import { Fragment } from 'react';
+import { IconSearch } from '@tabler/icons';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
+import NextImage from 'next/image';
+import { Fragment } from 'react';
+import Layout from '../../components/Layout';
+import { useQuerySearch } from '../../hooks/useQueryState';
+import { trpc } from '../../utils/trpc';
 
 export default function NHentaiPage() {
-  const router = useRouter();
-  const [query, setQuery] = useDebouncedState(
-    (router.query.search as string) ?? '',
-    800
-  );
+  const [search, setSearch] = useQuerySearch('');
   const theme = useMantineTheme();
   const {
     isLoading,
@@ -35,8 +31,8 @@ export default function NHentaiPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = trpc.useInfiniteQuery(['nhentai.search', { query }], {
-    enabled: !!query,
+  } = trpc.useInfiniteQuery(['nhentai.search', { query: search }], {
+    enabled: !!search,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
@@ -53,19 +49,8 @@ export default function NHentaiPage() {
         placeholder='Search'
         icon={<IconSearch size={16} stroke={1.5} />}
         autoComplete='off'
-        defaultValue={query}
-        onChange={(event) => {
-          const currentSearch = event.currentTarget.value;
-
-          if (currentSearch === '') {
-            router.push('/nhentai', undefined, { shallow: true });
-          } else {
-            router.push(`/nhentai?search=${currentSearch}`, undefined, {
-              shallow: true,
-            });
-          }
-          setQuery(currentSearch);
-        }}
+        defaultValue={search}
+        onChange={(event) => setSearch(event.currentTarget.value)}
       />
 
       <SimpleGrid
@@ -80,8 +65,8 @@ export default function NHentaiPage() {
         {isLoading &&
           [...Array(15)].map((_, i) => <Skeleton key={i} height={280} />)}
         {isSuccess &&
-          data.pages.map((page) => (
-            <Fragment key={page.nextCursor}>
+          data.pages.map((page, i) => (
+            <Fragment key={i}>
               {page.result.map((doujin) => (
                 <Paper
                   key={doujin.id}
@@ -104,12 +89,17 @@ export default function NHentaiPage() {
                     />
                   </Box>
 
-                  <LanguageBadge
-                    language={doujin.language}
-                    size='xs'
-                    mt={5}
-                    radius='xs'
-                  />
+                  <Group mt={5} spacing={5}>
+                    {doujin.language.map((language) => (
+                      <LanguageBadge
+                        key={language || 'unknown'}
+                        language={language}
+                        size='xs'
+                        mt={5}
+                        radius='xs'
+                      />
+                    ))}
+                  </Group>
 
                   <Text
                     size='sm'
