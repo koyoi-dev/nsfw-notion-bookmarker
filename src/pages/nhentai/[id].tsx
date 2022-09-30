@@ -36,12 +36,7 @@ export default function NHentailDetailPage() {
     enabled: !!id,
   });
 
-  const {
-    mutate,
-    isLoading: isSaving,
-    isSuccess: isSaved,
-    isError: isSaveError,
-  } = trpc.useMutation(['nhentai.save'], {
+  const { mutate, isLoading: isSaving } = trpc.useMutation(['nhentai.save'], {
     onSuccess: ({ notion }) => {
       trpcContext.invalidateQueries(['nhentai.get', { id }]);
 

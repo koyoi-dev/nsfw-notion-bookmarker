@@ -1,10 +1,7 @@
 import {
-  Badge,
   Button,
   ButtonProps,
   Center,
-  Chip,
-  Code,
   Grid,
   Group,
   Image,
@@ -19,7 +16,6 @@ import {
   IconBrandInstagram,
   IconBrandTwitter,
   IconExternalLink,
-  IconLetterI,
 } from '@tabler/icons';
 import Head from 'next/head';
 import { useRouter } from 'next/router';

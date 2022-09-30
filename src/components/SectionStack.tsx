@@ -1,5 +1,4 @@
 import { Stack, StackProps, TextProps, Text, Title } from '@mantine/core';
-import { capitalize } from 'radash';
 
 type SectionStackChildrenProps = {
   title: string;

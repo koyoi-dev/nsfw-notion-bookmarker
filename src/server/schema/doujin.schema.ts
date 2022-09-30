@@ -1,5 +1,5 @@
-import { group, isNumber } from 'radash';
-import { z, ZodError } from 'zod';
+import { group } from 'radash';
+import { z } from 'zod';
 
 const NHENTAI_GALLERY_URL = 'http://i.nhentai.net/galleries';
 const NHENTAI_URL = 'https://nhentai.net';

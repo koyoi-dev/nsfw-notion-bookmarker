@@ -36,7 +36,7 @@ export async function getDoujin(id: number, databaseId?: string) {
   });
 
   if (results.length > 0 && results.every(isFullPage)) {
-    return results[0]!;
+    return results[0] ?? null;
   }
 
   return null;
@@ -100,7 +100,7 @@ export async function getActress(slug: string, databaseId?: string) {
   });
 
   if (results.length > 0 && results.every(isFullPage)) {
-    return results[0]!;
+    return results[0] ?? null;
   }
 
   return null;

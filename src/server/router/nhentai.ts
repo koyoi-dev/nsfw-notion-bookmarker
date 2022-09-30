@@ -8,7 +8,6 @@ import { createRouter } from './context';
 
 // FIXME: move to a separate file
 const NHENTAI_IP = 'http://138.2.77.198:3002';
-const NHENTAI_GALLERY_URL = 'http://i.nhentai.net/galleries';
 
 export const nhentaiRouter = createRouter()
   .query('search', {
@@ -21,8 +20,6 @@ export const nhentaiRouter = createRouter()
         .default('popular-today'),
     }),
     async resolve({ input: { query, sort, cursor } }) {
-      const limit = 25; // Dari sana nya
-
       const [err, res] = await tryit(axios.get<any>)(
         `${NHENTAI_IP}/api/galleries/search`,
         {
