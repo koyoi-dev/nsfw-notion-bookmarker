@@ -48,8 +48,8 @@ const LINKS = [
   },
   {
     icon: IconWoman,
-    link: '/jav',
-    label: 'javfandom.com',
+    link: '/jav-actress',
+    label: 'jav-actress',
     description: 'Search for jav actress',
   },
 ];

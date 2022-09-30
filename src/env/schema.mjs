@@ -11,6 +11,9 @@ export const serverSchema = z.object({
   NOTION_NHENTAI_DATABASE_ID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: 'Alphanumeric characters only' }),
+  NOTION_JAVACTRESS_DATABASE_ID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: 'Alphanumeric characters only' }),
 });
 
 /**

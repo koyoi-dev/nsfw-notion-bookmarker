@@ -1,4 +1,5 @@
 import { Stack, StackProps, TextProps, Text, Title } from '@mantine/core';
+import { capitalize } from 'radash';
 
 type SectionStackChildrenProps = {
   title: string;
@@ -12,7 +13,7 @@ function SectionStack({ title, ...props }: SectionStackProps) {
       <Title order={4} mb='sm'>
         {title}
       </Title>
-      <Stack spacing='xs' {...props}>
+      <Stack spacing='md' {...props}>
         {props.children}
       </Stack>
     </section>
