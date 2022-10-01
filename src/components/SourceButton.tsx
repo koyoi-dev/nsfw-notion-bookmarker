@@ -1,4 +1,4 @@
-import { Button, ButtonProps, MantineThemeColors } from '@mantine/core';
+import { Button, ButtonProps } from '@mantine/core';
 import { IconExternalLink } from '@tabler/icons';
 
 type SourceButtonProps = {
@@ -15,8 +15,9 @@ export const SourceButton = ({ source, ...props }: SourceButtonProps) => {
       variant='outline'
       color='blue'
       rightIcon={<IconExternalLink size={18} />}
-      children='Source'
       {...props}
-    />
+    >
+      {props.children ?? 'Source'}
+    </Button>
   );
 };

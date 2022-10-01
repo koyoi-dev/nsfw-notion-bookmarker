@@ -1,12 +1,7 @@
 import { Button, Chip, Image, Paper, Text, Title } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { NextLink } from '@mantine/next';
-import {
-  queryTypes,
-  SetValues,
-  useQueryStates,
-  UseQueryStatesKeysMap,
-} from 'next-usequerystate';
+import { queryTypes, useQueryStates } from 'next-usequerystate';
 import Head from 'next/head';
 import { Fragment } from 'react';
 import Layout from '../../components/Layout';
@@ -27,8 +22,6 @@ const usePururinQuery = () => {
   });
   const [debounced] = useDebouncedValue(query, 800);
 
-  type PururinQuery = UseQueryStatesKeysMap<typeof query>;
-  type PururinSetQuery = SetValues<PururinQuery>;
   return {
     query,
     setQuery,
