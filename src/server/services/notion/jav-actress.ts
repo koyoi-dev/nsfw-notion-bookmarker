@@ -1,7 +1,7 @@
 import { isFullPage } from '@notionhq/client';
 import { capitalize, select } from 'radash';
 import { notion } from './client';
-import { NotionService } from './interface';
+import { INotionService } from './interface';
 
 interface SaveActress {
   slug: string;
@@ -20,7 +20,7 @@ interface SaveActress {
   birthdate: string | null;
 }
 
-export class JavActressService implements NotionService {
+export class NotionJavActress implements INotionService {
   constructor(private readonly databaseId: string) {}
 
   async get(slug: string) {

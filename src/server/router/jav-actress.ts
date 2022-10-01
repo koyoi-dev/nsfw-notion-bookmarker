@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { env } from '../../env/server.mjs';
 import { getActress, getAllActress } from '../services/fetcher/jav-actress';
-import { JavActressService } from '../services/notion/jav-actress';
+import { NotionJavActress } from '../services/notion/jav-actress';
 import { createRouter } from './context';
 
-const notionJavActress = new JavActressService(
+const notionJavActress = new NotionJavActress(
   env.NOTION_JAVACTRESS_DATABASE_ID
 );
 

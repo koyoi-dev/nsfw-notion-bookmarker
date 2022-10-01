@@ -121,5 +121,6 @@ export const Doujin = z
         cover: `${NHENTAI_GALLERY_URL}/${doujin.media_id}/1.${doujin.images.cover.t}`,
         thumbnail: `${NHENTAI_GALLERY_URL}/${doujin.media_id}/cover.${doujin.images.thumbnail.t}`,
       },
+      source: `${NHENTAI_URL}/g/${doujin.id}`,
     };
   });

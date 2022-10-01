@@ -1,9 +1,12 @@
 import { select } from 'radash';
 import { z } from 'zod';
+import { env } from '../../env/server.mjs';
 import { doujinIdSchema } from '../schema/nhentai.schema';
 import { getAllDoujins, getDoujin } from '../services/fetcher/nhentai';
-import { getDoujin as getNotionDoujin, saveDoujin } from '../services/notion';
+import { NotionNhentai } from '../services/notion/nhentai';
 import { createRouter } from './context';
+
+const notionNhentai = new NotionNhentai(env.NOTION_NHENTAI_DATABASE_ID);
 
 export const nhentaiRouter = createRouter()
   .query('search', {
@@ -59,7 +62,7 @@ export const nhentaiRouter = createRouter()
     }),
     async resolve({ input: { id } }) {
       const doujin = await getDoujin(id);
-      const notion = await getNotionDoujin(id);
+      const notion = await notionNhentai.get(id);
 
       return {
         ...doujin,
@@ -87,15 +90,16 @@ export const nhentaiRouter = createRouter()
         name: language.name,
       }));
 
-      const notionDoujin = await saveDoujin({
+      const notionDoujin = await notionNhentai.save({
         title,
         id: doujin.id,
         thumbnail: doujin.images.cover,
         authors,
         languages,
         totalPages: doujin.num_pages,
-        englishTitle: doujin.title.english || '',
-        japaneseTitle: doujin.title.japanese || '',
+        english: doujin.title.english || null,
+        japanese: doujin.title.japanese || null,
+        source: doujin.source,
       });
 
       return {
