@@ -124,3 +124,12 @@ export const Doujin = z
       source: `${NHENTAI_URL}/g/${doujin.id}`,
     };
   });
+
+export enum NHENTAI_SORT_BY {
+  POPULAR = 'popular',
+  POPULAR_WEEK = 'popular-week',
+  POPULAR_TODAY = 'popular-today',
+}
+export const NHENTAI_SORT_BY_VALUES = Object.values(NHENTAI_SORT_BY);
+export const nhentaiSortBySchema = z.nativeEnum(NHENTAI_SORT_BY);
+export type NhentaiSortBy = z.infer<typeof nhentaiSortBySchema>;

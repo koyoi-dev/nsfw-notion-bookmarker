@@ -3,24 +3,43 @@ import {
   BadgeProps,
   Box,
   Button,
+  Chip,
   Group,
   Paper,
   Text,
   Title,
   useMantineTheme,
 } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
 import { NextLink } from '@mantine/next';
+import { queryTypes, useQueryStates } from 'next-usequerystate';
 import Head from 'next/head';
 import NextImage from 'next/image';
 import { Fragment } from 'react';
 import Layout from '../../components/Layout';
 import { ResponsiveGrid } from '../../components/ResponsiveGrid';
 import { SearchBox } from '../../components/SearchBox';
-import { useQuerySearch } from '../../hooks/useQueryState';
+import { NHENTAI_SORT_BY } from '../../schema/nhentai.schema';
 import { trpc } from '../../utils/trpc';
 
+const useNhentaiQuery = () => {
+  const [query, setQuery] = useQueryStates({
+    search: queryTypes.string.withDefault(''),
+    sort: queryTypes
+      .stringEnum<NHENTAI_SORT_BY>(Object.values(NHENTAI_SORT_BY))
+      .withDefault(NHENTAI_SORT_BY.POPULAR),
+  });
+  const [debounced] = useDebouncedValue(query, 800);
+
+  return {
+    query,
+    setQuery,
+    debounced,
+  };
+};
+
 export default function NHentaiPage() {
-  const [search, setSearch] = useQuerySearch('');
+  const { query, setQuery, debounced } = useNhentaiQuery();
   const theme = useMantineTheme();
   const {
     isLoading,
@@ -29,10 +48,13 @@ export default function NHentaiPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = trpc.useInfiniteQuery(['nhentai.search', { query: search }], {
-    enabled: !!search,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-  });
+  } = trpc.useInfiniteQuery(
+    ['nhentai.search', { query: debounced.search, sort: debounced.sort }],
+    {
+      enabled: !!debounced.search,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    }
+  );
 
   return (
     <Layout>
@@ -44,9 +66,26 @@ export default function NHentaiPage() {
       </Title>
 
       <SearchBox
-        defaultValue={search}
-        onChange={(event) => setSearch(event.currentTarget.value)}
+        value={query.search}
+        onChange={(event) =>
+          setQuery((q) => ({ ...q, search: event.target.value }))
+        }
       />
+
+      <Chip.Group
+        mt='md'
+        multiple={false}
+        value={query.sort}
+        onChange={(value: NHENTAI_SORT_BY) =>
+          setQuery((q) => ({ ...q, sort: value }))
+        }
+      >
+        {Object.values(NHENTAI_SORT_BY).map((sort) => (
+          <Chip key={sort} value={sort} radius='md'>
+            {sort}
+          </Chip>
+        ))}
+      </Chip.Group>
 
       <ResponsiveGrid mt='xl' skeleton={isLoading}>
         {isSuccess &&

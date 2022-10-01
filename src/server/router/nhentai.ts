@@ -1,25 +1,31 @@
+import axios from 'axios';
 import { select } from 'radash';
 import { z } from 'zod';
 import { env } from '../../env/server.mjs';
-import { doujinIdSchema } from '../schema/nhentai.schema';
-import { getAllDoujins, getDoujin } from '../services/fetcher/nhentai';
-import { NotionNhentai } from '../services/notion/nhentai';
+import {
+  Doujin,
+  doujinIdSchema,
+  NhentaiSortBy,
+  nhentaiSortBySchema,
+  NHENTAI_SORT_BY,
+} from '../../schema/nhentai.schema';
+import { DoujinFromSource, NotionDoujin } from '../services/notion/doujin';
 import { createRouter } from './context';
 
-const notionNhentai = new NotionNhentai(env.NOTION_NHENTAI_DATABASE_ID);
+const fetcher = axios.create({
+  baseURL: 'http://138.2.77.198:3002',
+});
+const doujinNotion = new NotionDoujin(env.NOTION_DOUJIN_DATABASE_ID);
 
 export const nhentaiRouter = createRouter()
   .query('search', {
     input: z.object({
       query: z.string(),
       cursor: z.number().min(1).default(1),
-      sort: z
-        .enum(['popular', 'popular-week', 'popular-today'])
-        .optional()
-        .default('popular-today'),
+      sort: nhentaiSortBySchema.default(NHENTAI_SORT_BY.POPULAR),
     }),
     async resolve({ input: { query, sort, cursor } }) {
-      const { result: doujins, num_pages } = await getAllDoujins({
+      const { result: doujins, num_pages } = await searchDoujins({
         query,
         page: cursor,
         sort,
@@ -62,7 +68,7 @@ export const nhentaiRouter = createRouter()
     }),
     async resolve({ input: { id } }) {
       const doujin = await getDoujin(id);
-      const notion = await notionNhentai.get(id);
+      const notion = await doujinNotion.get(DoujinFromSource.NHENTAI, id);
 
       return {
         ...doujin,
@@ -83,19 +89,13 @@ export const nhentaiRouter = createRouter()
         doujin.title.japanese ||
         'No Title';
 
-      const authors = doujin.tags.artist.map((artist) => ({
-        name: artist.name,
-      }));
-      const languages = doujin.tags.language.map((language) => ({
-        name: language.name,
-      }));
-
-      const notionDoujin = await notionNhentai.save({
+      const notionDoujin = await doujinNotion.save({
+        from: DoujinFromSource.NHENTAI,
         title,
         id: doujin.id,
         thumbnail: doujin.images.cover,
-        authors,
-        languages,
+        authors: doujin.tags.artist.map(({ name }) => ({ name })),
+        languages: doujin.tags.language.map(({ name }) => ({ name })),
         totalPages: doujin.num_pages,
         english: doujin.title.english || null,
         japanese: doujin.title.japanese || null,
@@ -107,3 +107,23 @@ export const nhentaiRouter = createRouter()
       };
     },
   });
+
+const searchDoujins = async (params: {
+  query: string;
+  page: number;
+  sort: NhentaiSortBy;
+}) => {
+  const { data } = await fetcher.get('/api/galleries/search', {
+    params,
+  });
+
+  const result = Doujin.array().parse(data.result);
+  const num_pages = z.number().parse(data.num_pages);
+  return { result, num_pages };
+};
+
+const getDoujin = async (id: number) => {
+  const { data } = await fetcher.get(`/api/gallery/${id}`);
+
+  return Doujin.parse(data);
+};

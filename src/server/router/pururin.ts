@@ -12,8 +12,7 @@ import {
 import { DoujinFromSource, NotionDoujin } from '../services/notion/doujin';
 import { createRouter } from './context';
 
-// FIXME: fix env name so its not confusing
-const notionDoujin = new NotionDoujin(env.NOTION_NHENTAI_DATABASE_ID);
+const notionDoujin = new NotionDoujin(env.NOTION_DOUJIN_DATABASE_ID);
 
 export const pururinRouter = createRouter()
   .query('search', {
