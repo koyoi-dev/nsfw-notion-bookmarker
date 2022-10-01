@@ -10,7 +10,7 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { NextLink } from '@mantine/next';
-import { IconBooks, IconMovie, IconWoman } from '@tabler/icons';
+import { IconBook2, IconBooks, IconMovie, IconWoman } from '@tabler/icons';
 import { useRouter } from 'next/router';
 import type { ReactNode } from 'react';
 import { ReactQueryDevtools } from 'react-query/devtools';
@@ -24,7 +24,12 @@ export default function Layout({ children }: LayoutProps) {
     <>
       <Header />
       <main>
-        <Container py='lg'>{children}</Container>
+        <Container
+          py='lg'
+          style={{ minHeight: '100vh' }} // fix to make scrollbar appear on desktop and mobile
+        >
+          {children}
+        </Container>
       </main>
       {process.env.NODE_ENV !== 'production' && (
         <ReactQueryDevtools initialIsOpen={false} />
@@ -45,6 +50,12 @@ const LINKS = [
     link: '/nhentai',
     label: 'nhentai.net',
     description: 'Search for doujin',
+  },
+  {
+    icon: IconBook2,
+    link: '/pururin',
+    label: 'pururin.to',
+    description: 'Search in pururin',
   },
   {
     icon: IconWoman,
