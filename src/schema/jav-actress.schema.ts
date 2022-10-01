@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import dayjs from '../../utils/dayjs';
+import dayjs from '../utils/dayjs';
 
 export const BASE_URL = 'https://vje2ck1u.directus.app';
 

@@ -1,15 +1,34 @@
 import { Button, Image, Paper, Text, Title } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
 import { NextLink } from '@mantine/next';
+import { queryTypes, useQueryState } from 'next-usequerystate';
 import Head from 'next/head';
 import { Fragment } from 'react';
 import Layout from '../../components/Layout';
 import { ResponsiveGrid } from '../../components/ResponsiveGrid';
 import { SearchBox } from '../../components/SearchBox';
-import { useQuerySearch } from '../../hooks/useQueryState';
 import { trpc } from '../../utils/trpc';
 
+const useJavActressQuery = () => {
+  const [query, setQuery] = useQueryState(
+    'search',
+    queryTypes.string.withDefault('')
+  );
+  const [debounced] = useDebouncedValue(query, 800);
+
+  return {
+    query,
+    setQuery,
+    debounced,
+  };
+};
+
 export default function JavActressesPage() {
-  const [search, setSearch] = useQuerySearch('');
+  const {
+    query: search,
+    setQuery: setSearch,
+    debounced,
+  } = useJavActressQuery();
 
   const {
     isLoading,
@@ -18,8 +37,8 @@ export default function JavActressesPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = trpc.useInfiniteQuery(['jav-actress.search', { query: search }], {
-    enabled: !!search,
+  } = trpc.useInfiniteQuery(['jav-actress.search', { query: debounced }], {
+    enabled: !!debounced,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
