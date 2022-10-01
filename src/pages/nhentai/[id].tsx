@@ -19,6 +19,7 @@ import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
 import { NotionButton } from '../../components/NotionButton';
 import { SectionStack } from '../../components/SectionStack';
+import { SourceButton } from '../../components/SourceButton';
 import dayjs from '../../utils/dayjs';
 import { trpc } from '../../utils/trpc';
 
@@ -98,6 +99,8 @@ export default function NHentailDetailPage() {
                     loading={isSaving}
                   />
                 )}
+
+                <SourceButton source={doujin.source} />
               </Stack>
             </Center>
           </Grid.Col>
