@@ -1,7 +1,6 @@
 import {
   Badge,
   Box,
-  Button,
   Center,
   Grid,
   Group,
@@ -13,7 +12,8 @@ import {
   useMantineTheme,
 } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
-import { IconExternalLink, IconHash, IconStars } from '@tabler/icons';
+import { IconHash } from '@tabler/icons';
+import Head from 'next/head';
 import NextImage from 'next/image';
 import { useRouter } from 'next/router';
 import Layout from '../../components/Layout';
@@ -55,6 +55,10 @@ export default function NHentailDetailPage() {
 
   return (
     <Layout>
+      <Head>
+        <title>NHentai | {id}</title>
+      </Head>
+
       {isLoading && (
         <Center style={{ height: '100vh' }}>
           <Loader variant='bars' />
@@ -82,28 +86,17 @@ export default function NHentailDetailPage() {
                   />
                 </Box>
                 {doujin.notion ? (
-                  <Button
-                    component='a'
-                    rel='noopener noreferrer'
-                    href={doujin.notion.url.replace('https', 'notion')}
-                    variant='white'
-                    color='dark'
-                    leftIcon={<IconExternalLink size={20} />}
-                  >
-                    Open in Notion
-                  </Button>
+                  <NotionButton
+                    type='link'
+                    notionUrl={doujin.notion.url}
+                    openIn='app'
+                  />
                 ) : (
                   <NotionButton
-                    disabled={!!doujin.notion}
-                    loading={isSaving}
+                    type='button'
                     onClick={() => mutate({ id })}
-                  >
-                    {isSaving
-                      ? 'Saving...'
-                      : !!doujin.notion
-                      ? 'Saved'
-                      : 'Save'}
-                  </NotionButton>
+                    loading={isSaving}
+                  />
                 )}
               </Stack>
             </Center>
@@ -117,25 +110,15 @@ export default function NHentailDetailPage() {
                 <ThemeIcon color='red'>
                   <IconHash size={20} />
                 </ThemeIcon>
-                <Text inline weight={700}>
+                <Text inline weight={600} size='lg'>
                   {doujin.id}
-                </Text>
-              </Group>
-              <Group spacing='xs'>
-                <ThemeIcon color='yellow'>
-                  <IconStars size={20} />
-                </ThemeIcon>
-                <Text inline weight={700}>
-                  {Intl.NumberFormat('en-US', { notation: 'compact' }).format(
-                    doujin.num_favorites
-                  )}
                 </Text>
               </Group>
             </Group>
             {/* More details */}
             <Stack mt='md'>
               {/* TOP */}
-              <Title order={4}>Alternative Titles</Title>
+              <Title order={4}>Titles</Title>
               <Stack spacing='xs'>
                 <Group spacing='xs'>
                   <ThemeIcon variant='light' color='red'>
@@ -159,28 +142,37 @@ export default function NHentailDetailPage() {
                   )} (${dayjs(doujin.upload_date).fromNow()})`}</Text>
                 </SectionStack.Children>
 
-                <SectionStack.Children title='Total pages'>
-                  <Text inline>{doujin.num_pages}</Text>
-                </SectionStack.Children>
+                <Group spacing='xl'>
+                  <SectionStack.Children title='Total pages'>
+                    <Text inline>{doujin.num_pages}</Text>
+                  </SectionStack.Children>
+                  <SectionStack.Children title='Favorites'>
+                    <Text inline>{doujin.num_favorites}</Text>
+                  </SectionStack.Children>
+                </Group>
+              </SectionStack>
 
-                <SectionStack.Children title='Authors'>
-                  <BadgeGroup tags={doujin.tags.artist} />
-                </SectionStack.Children>
+              <SectionStack title='Tags'>
+                <Group spacing='xl'>
+                  <SectionStack.Children title='Authors'>
+                    <BadgeGroup tags={doujin.tags.artist} />
+                  </SectionStack.Children>
+
+                  <SectionStack.Children title='Categories'>
+                    <BadgeGroup tags={doujin.tags.category} />
+                  </SectionStack.Children>
+
+                  <SectionStack.Children title='Parodies'>
+                    <BadgeGroup tags={doujin.tags.parody} />
+                  </SectionStack.Children>
+
+                  <SectionStack.Children title='Characters'>
+                    <BadgeGroup tags={doujin.tags.character} />
+                  </SectionStack.Children>
+                </Group>
 
                 <SectionStack.Children title='Tags'>
                   <BadgeGroup tags={doujin.tags.tag} />
-                </SectionStack.Children>
-
-                <SectionStack.Children title='Categories'>
-                  <BadgeGroup tags={doujin.tags.category} />
-                </SectionStack.Children>
-
-                <SectionStack.Children title='Parodies'>
-                  <BadgeGroup tags={doujin.tags.parody} />
-                </SectionStack.Children>
-
-                <SectionStack.Children title='Characters'>
-                  <BadgeGroup tags={doujin.tags.character} />
                 </SectionStack.Children>
               </SectionStack>
             </Stack>
@@ -194,24 +186,32 @@ export default function NHentailDetailPage() {
 const BadgeGroup = ({
   tags,
 }: {
-  tags?: { id: string | number; name: string; url: string }[];
+  tags: { id: string | number; name: string; url: string }[];
 }) => {
   return (
     <Group spacing='xs'>
-      {tags?.map((tag) => (
-        <Badge
-          key={tag.id}
-          component='a'
-          rel='noopener noreferrer'
-          href={tag.url}
-          target='_blank'
-          variant='filled'
-          color='gray'
-          radius='sm'
-        >
-          {tag.name}
+      {tags.length > 0 ? (
+        tags.map((tag) => (
+          <Badge
+            key={tag.id}
+            component='a'
+            rel='noopener noreferrer'
+            href={tag.url}
+            target='_blank'
+            variant='filled'
+            color='gray'
+            radius='sm'
+          >
+            {tag.name}
+          </Badge>
+        ))
+      ) : (
+        <Badge variant='outline' color='dark' radius='sm'>
+          <Text span inline strikethrough>
+            None
+          </Text>
         </Badge>
-      )) ?? 'N/A'}
+      )}
     </Group>
   );
 };

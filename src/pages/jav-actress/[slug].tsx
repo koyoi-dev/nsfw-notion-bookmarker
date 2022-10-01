@@ -1,6 +1,4 @@
 import {
-  Button,
-  ButtonProps,
   Center,
   Grid,
   Group,
@@ -12,11 +10,7 @@ import {
   Title,
 } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
-import {
-  IconBrandInstagram,
-  IconBrandTwitter,
-  IconExternalLink,
-} from '@tabler/icons';
+import { IconBrandInstagram, IconBrandTwitter } from '@tabler/icons';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { BadgeLink } from '../../components/BadgeLink';
@@ -85,22 +79,17 @@ export default function JavActressPage() {
                   radius='md'
                 />
                 {actress.notion ? (
-                  <OpenNotionButton
+                  <NotionButton
+                    type='link'
                     notionUrl={actress.notion.url}
                     openIn='app'
                   />
                 ) : (
                   <NotionButton
-                    disabled={!!actress.notion}
-                    loading={isSaving}
+                    type='button'
                     onClick={() => mutate({ slug })}
-                  >
-                    {isSaving
-                      ? 'Saving...'
-                      : !!actress.notion
-                      ? 'Saved'
-                      : 'Save'}
-                  </NotionButton>
+                    loading={isSaving}
+                  />
                 )}
               </Stack>
             </Center>
@@ -207,28 +196,3 @@ export default function JavActressPage() {
     </Layout>
   );
 }
-
-type OpenNotionButtonProps = {
-  notionUrl: string;
-  openIn?: 'app' | 'web';
-} & ButtonProps;
-const OpenNotionButton = ({
-  notionUrl,
-  openIn,
-  ...btnProps
-}: OpenNotionButtonProps) => {
-  return (
-    <Button
-      component='a'
-      rel='noopener noreferrer'
-      href={openIn === 'app' ? notionUrl.replace('https', 'notion') : notionUrl}
-      variant='white'
-      color='dark'
-      leftIcon={<IconExternalLink size={20} />}
-      {...btnProps}
-    >
-      {btnProps.children ||
-        (openIn === 'app' ? 'Open in Notion' : 'Open in Browser')}
-    </Button>
-  );
-};

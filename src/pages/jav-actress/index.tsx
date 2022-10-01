@@ -1,28 +1,15 @@
-import {
-  Button,
-  Image,
-  Paper,
-  SimpleGrid,
-  SimpleGridProps,
-  Skeleton,
-  Text,
-  TextInput,
-  TextInputProps,
-  Title,
-} from '@mantine/core';
-import { useDebouncedState } from '@mantine/hooks';
+import { Button, Image, Paper, Text, Title } from '@mantine/core';
 import { NextLink } from '@mantine/next';
-import { IconSearch } from '@tabler/icons';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import { Fragment } from 'react';
 import Layout from '../../components/Layout';
+import { ResponsiveGrid } from '../../components/ResponsiveGrid';
+import { SearchBox } from '../../components/SearchBox';
+import { useQuerySearch } from '../../hooks/useQueryState';
 import { trpc } from '../../utils/trpc';
 
 export default function JavActressesPage() {
-  const router = useRouter();
-  const search = router.query.search as string;
-  const [query, setQuery] = useDebouncedState(search ?? '', 800);
+  const [search, setSearch] = useQuerySearch('');
 
   const {
     isLoading,
@@ -31,8 +18,8 @@ export default function JavActressesPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = trpc.useInfiniteQuery(['jav-actress.search', { query }], {
-    enabled: !!query,
+  } = trpc.useInfiniteQuery(['jav-actress.search', { query: search }], {
+    enabled: !!search,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
@@ -46,22 +33,11 @@ export default function JavActressesPage() {
       </Title>
 
       <SearchBox
-        defaultValue={query}
-        onChange={(event) => {
-          const currentSearch = event.currentTarget.value;
-
-          if (currentSearch === '') {
-            router.push('/jav-actress', undefined, { shallow: true });
-          } else {
-            router.push(`/jav-actress?search=${currentSearch}`, undefined, {
-              shallow: true,
-            });
-          }
-          setQuery(currentSearch);
-        }}
+        defaultValue={search}
+        onChange={(event) => setSearch(event.currentTarget.value)}
       />
 
-      <ResponsiveGrid mt='xl' loading={isLoading}>
+      <ResponsiveGrid mt='xl' skeleton={isLoading}>
         {isSuccess &&
           data.pages.map((page, i) => (
             <Fragment key={i}>
@@ -111,33 +87,3 @@ export default function JavActressesPage() {
     </Layout>
   );
 }
-
-type SearchBoxProps = TextInputProps;
-const SearchBox = (props: SearchBoxProps) => {
-  return (
-    <TextInput
-      placeholder='Search'
-      icon={<IconSearch size={16} stroke={1.5} />}
-      autoComplete='off'
-      {...props}
-    />
-  );
-};
-
-type ResponsiveGridProps = {
-  loading: boolean;
-} & SimpleGridProps;
-const ResponsiveGrid = ({ loading, ...props }: ResponsiveGridProps) => {
-  return (
-    <SimpleGrid
-      cols={3}
-      spacing='md'
-      breakpoints={[{ minWidth: 'md', cols: 5 }]}
-      {...props}
-    >
-      {loading
-        ? [...Array(15)].map((_, i) => <Skeleton key={i} height={280} />)
-        : props.children}
-    </SimpleGrid>
-  );
-};

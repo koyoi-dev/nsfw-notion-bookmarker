@@ -5,19 +5,17 @@ import {
   Button,
   Group,
   Paper,
-  SimpleGrid,
-  Skeleton,
   Text,
-  TextInput,
   Title,
   useMantineTheme,
 } from '@mantine/core';
 import { NextLink } from '@mantine/next';
-import { IconSearch } from '@tabler/icons';
 import Head from 'next/head';
 import NextImage from 'next/image';
 import { Fragment } from 'react';
 import Layout from '../../components/Layout';
+import { ResponsiveGrid } from '../../components/ResponsiveGrid';
+import { SearchBox } from '../../components/SearchBox';
 import { useQuerySearch } from '../../hooks/useQueryState';
 import { trpc } from '../../utils/trpc';
 
@@ -45,25 +43,12 @@ export default function NHentaiPage() {
         nhentai.net
       </Title>
 
-      <TextInput
-        placeholder='Search'
-        icon={<IconSearch size={16} stroke={1.5} />}
-        autoComplete='off'
+      <SearchBox
         defaultValue={search}
         onChange={(event) => setSearch(event.currentTarget.value)}
       />
 
-      <SimpleGrid
-        cols={3}
-        spacing='md'
-        mt='xl'
-        breakpoints={[
-          { minWidth: 'md', cols: 4 },
-          { minWidth: 'lg', cols: 5 },
-        ]}
-      >
-        {isLoading &&
-          [...Array(15)].map((_, i) => <Skeleton key={i} height={280} />)}
+      <ResponsiveGrid mt='xl' skeleton={isLoading}>
         {isSuccess &&
           data.pages.map((page, i) => (
             <Fragment key={i}>
@@ -129,7 +114,7 @@ export default function NHentaiPage() {
             ? 'Load More'
             : 'Nothing'}
         </Button>
-      </SimpleGrid>
+      </ResponsiveGrid>
     </Layout>
   );
 }
