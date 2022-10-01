@@ -48,7 +48,7 @@ export default function JavActressesPage() {
         <title>Jav Actress</title>
       </Head>
       <Title order={1} mb='xl'>
-        Jav Actress
+        jav-actress
       </Title>
 
       <SearchBox
