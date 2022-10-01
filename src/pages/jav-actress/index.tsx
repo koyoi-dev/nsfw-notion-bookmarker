@@ -26,7 +26,7 @@ export default function JavActressesPage() {
   return (
     <Layout>
       <Head>
-        <title>NSFW Bookmarker | Jav Actress</title>
+        <title>Jav Actress</title>
       </Head>
       <Title order={1} mb='xl'>
         Jav Actress

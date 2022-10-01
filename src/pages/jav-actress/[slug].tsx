@@ -56,7 +56,7 @@ export default function JavActressPage() {
   return (
     <Layout>
       <Head>
-        <title>JAV Actress | {slug}</title>
+        <title>JAV Actress</title>
       </Head>
 
       {isActressLoading && (

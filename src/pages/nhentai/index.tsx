@@ -37,7 +37,7 @@ export default function NHentaiPage() {
   return (
     <Layout>
       <Head>
-        <title>NSFW Bookmarker | nhentai</title>
+        <title>nhentai</title>
       </Head>
       <Title order={1} mb='xl'>
         nhentai.net

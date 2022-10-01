@@ -56,7 +56,7 @@ export default function NHentailDetailPage() {
   return (
     <Layout>
       <Head>
-        <title>NHentai | {id}</title>
+        <title>nhentai</title>
       </Head>
 
       {isLoading && (
