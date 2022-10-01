@@ -9,10 +9,8 @@ import {
   PururinSearchSortBy,
   pururinSearchSortTypeSchema,
 } from '../../schema/pururin.schema';
-import { DoujinFromSource, NotionDoujin } from '../services/notion/doujin';
+import { DoujinFromSource, notionDoujin } from '../services/notion/doujin';
 import { createRouter } from './context';
-
-const notionDoujin = new NotionDoujin(env.NOTION_DOUJIN_DATABASE_ID);
 
 export const pururinRouter = createRouter()
   .query('search', {

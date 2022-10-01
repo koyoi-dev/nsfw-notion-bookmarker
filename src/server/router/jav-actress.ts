@@ -2,12 +2,9 @@ import axios from 'axios';
 import { z } from 'zod';
 import { env } from '../../env/server.mjs';
 import { BASE_URL, JavActressSchema } from '../../schema/jav-actress.schema';
-import { NotionJavActress } from '../services/notion/jav-actress';
+import { notionJavActress } from '../services/notion/jav-actress';
 import { createRouter } from './context';
 
-const notionJavActress = new NotionJavActress(
-  env.NOTION_JAVACTRESS_DATABASE_ID
-);
 const fetcher = axios.create({
   baseURL: BASE_URL,
 });

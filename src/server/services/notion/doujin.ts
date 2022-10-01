@@ -1,5 +1,6 @@
 import { isFullPage } from '@notionhq/client';
 import { capitalize, select } from 'radash';
+import { env } from '../../../env/server.mjs';
 import { notion } from './client';
 
 // value will be the value of the property in Notion
@@ -24,7 +25,7 @@ interface SaveDoujin {
   japanese: string | null;
 }
 
-export class NotionDoujin {
+class NotionDoujin {
   constructor(private readonly databaseId: string) {}
 
   async get(from: DoujinFromSource, id: number) {
@@ -101,3 +102,5 @@ export class NotionDoujin {
     return page;
   }
 }
+
+export const notionDoujin = new NotionDoujin(env.NOTION_DOUJIN_DATABASE_ID);

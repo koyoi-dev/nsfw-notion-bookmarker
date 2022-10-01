@@ -9,13 +9,12 @@ import {
   nhentaiSortBySchema,
   NHENTAI_SORT_BY,
 } from '../../schema/nhentai.schema';
-import { DoujinFromSource, NotionDoujin } from '../services/notion/doujin';
+import { DoujinFromSource, notionDoujin } from '../services/notion/doujin';
 import { createRouter } from './context';
 
 const fetcher = axios.create({
   baseURL: 'http://138.2.77.198:3002',
 });
-const doujinNotion = new NotionDoujin(env.NOTION_DOUJIN_DATABASE_ID);
 
 export const nhentaiRouter = createRouter()
   .query('search', {
@@ -68,7 +67,7 @@ export const nhentaiRouter = createRouter()
     }),
     async resolve({ input: { id } }) {
       const doujin = await getDoujin(id);
-      const notion = await doujinNotion.get(DoujinFromSource.NHENTAI, id);
+      const notion = await notionDoujin.get(DoujinFromSource.NHENTAI, id);
 
       return {
         ...doujin,
@@ -89,7 +88,7 @@ export const nhentaiRouter = createRouter()
         doujin.title.japanese ||
         'No Title';
 
-      const notionDoujin = await doujinNotion.save({
+      const notion = await notionDoujin.save({
         from: DoujinFromSource.NHENTAI,
         title,
         id: doujin.id,
@@ -102,9 +101,7 @@ export const nhentaiRouter = createRouter()
         source: doujin.source,
       });
 
-      return {
-        notion: notionDoujin,
-      };
+      return notion;
     },
   });
 

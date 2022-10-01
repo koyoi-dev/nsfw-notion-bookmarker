@@ -1,5 +1,6 @@
 import { isFullPage } from '@notionhq/client';
 import { capitalize, select } from 'radash';
+import { env } from '../../../env/server.mjs';
 import { notion } from './client';
 
 interface SaveActress {
@@ -19,7 +20,7 @@ interface SaveActress {
   birthdate: string | null;
 }
 
-export class NotionJavActress {
+class NotionJavActress {
   constructor(private readonly databaseId: string) {}
 
   async get(slug: string) {
@@ -87,3 +88,7 @@ export class NotionJavActress {
     return page;
   }
 }
+
+export const notionJavActress = new NotionJavActress(
+  env.NOTION_JAVACTRESS_DATABASE_ID
+);
