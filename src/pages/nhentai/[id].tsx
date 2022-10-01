@@ -16,6 +16,7 @@ import { IconHash } from '@tabler/icons';
 import Head from 'next/head';
 import NextImage from 'next/image';
 import { useRouter } from 'next/router';
+import { BadgeGroup } from '../../components/BadgeGroup';
 import Layout from '../../components/Layout';
 import { NotionButton } from '../../components/NotionButton';
 import { SectionStack } from '../../components/SectionStack';
@@ -158,24 +159,24 @@ export default function NHentailDetailPage() {
               <SectionStack title='Tags'>
                 <Group spacing='xl'>
                   <SectionStack.Children title='Authors'>
-                    <BadgeGroup tags={doujin.tags.artist} />
+                    <BadgeGroup badges={doujin.tags.artist} />
                   </SectionStack.Children>
 
                   <SectionStack.Children title='Categories'>
-                    <BadgeGroup tags={doujin.tags.category} />
+                    <BadgeGroup badges={doujin.tags.category} />
                   </SectionStack.Children>
 
                   <SectionStack.Children title='Parodies'>
-                    <BadgeGroup tags={doujin.tags.parody} />
+                    <BadgeGroup badges={doujin.tags.parody} />
                   </SectionStack.Children>
 
                   <SectionStack.Children title='Characters'>
-                    <BadgeGroup tags={doujin.tags.character} />
+                    <BadgeGroup badges={doujin.tags.character} />
                   </SectionStack.Children>
                 </Group>
 
                 <SectionStack.Children title='Tags'>
-                  <BadgeGroup tags={doujin.tags.tag} />
+                  <BadgeGroup badges={doujin.tags.tag} />
                 </SectionStack.Children>
               </SectionStack>
             </Stack>
@@ -185,36 +186,3 @@ export default function NHentailDetailPage() {
     </Layout>
   );
 }
-
-const BadgeGroup = ({
-  tags,
-}: {
-  tags: { id: string | number; name: string; url: string }[];
-}) => {
-  return (
-    <Group spacing='xs'>
-      {tags.length > 0 ? (
-        tags.map((tag) => (
-          <Badge
-            key={tag.id}
-            component='a'
-            rel='noopener noreferrer'
-            href={tag.url}
-            target='_blank'
-            variant='filled'
-            color='gray'
-            radius='sm'
-          >
-            {tag.name}
-          </Badge>
-        ))
-      ) : (
-        <Badge variant='outline' color='dark' radius='sm'>
-          <Text span inline strikethrough>
-            None
-          </Text>
-        </Badge>
-      )}
-    </Group>
-  );
-};
