@@ -15,7 +15,7 @@ import { SearchBox } from '../../components/SearchBox';
 import {
   PururinSearchSortBy,
   PURURIN_SEARCH_SORT,
-} from '../../server/modules/pururin/schema';
+} from '../../schema/pururin.schema';
 import { trpc } from '../../utils/trpc';
 
 const usePururinQuery = () => {

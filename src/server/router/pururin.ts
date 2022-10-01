@@ -1,10 +1,14 @@
+import axios from 'axios';
 import { z } from 'zod';
 import { env } from '../../env/server.mjs';
-import { getDoujin, searchDoujin } from '../modules/pururin/api';
 import {
+  pururinGetResponseSchema,
+  PururinId,
   pururinIdSchema,
+  pururinSearchResponseSchema,
+  PururinSearchSortBy,
   pururinSearchSortTypeSchema,
-} from '../modules/pururin/schema';
+} from '../../schema/pururin.schema';
 import { DoujinFromSource, NotionDoujin } from '../services/notion/doujin';
 import { createRouter } from './context';
 
@@ -75,3 +79,50 @@ export const pururinRouter = createRouter()
       };
     },
   });
+
+const fetcher = axios.create({
+  baseURL: 'https://pururin.to',
+});
+type SearchDoujin = {
+  query: string;
+  page?: number;
+  sort?: PururinSearchSortBy;
+};
+const searchDoujin = async ({ query, page, sort }: SearchDoujin) => {
+  const response = await fetcher.post('/api/search/advance', {
+    search: {
+      PageNumber: page ?? 1, // configurable
+      sort: sort ?? PururinSearchSortBy.NEWEST, // configurable
+      manga: {
+        string: query,
+        sort: '1', // 1: contains with, 2: starts with
+      },
+      tag: { items: { whitelisted: [], blacklisted: [] }, sort: '1' },
+      page: { range: [0, 1000] },
+    },
+  });
+
+  const { results, status } = pururinSearchResponseSchema.parse(response.data);
+  if (!status) {
+    throw new Error('Pururin return status false');
+  }
+
+  return results;
+};
+
+const getDoujin = async (id: PururinId) => {
+  const response = await fetcher.post('/api/contribute/gallery/info', {
+    id,
+    type: 2, // what is this?
+  });
+
+  const { status, gallery: doujin } = pururinGetResponseSchema.parse(
+    response.data
+  );
+
+  if (!status) {
+    throw new Error('Pururin return status false');
+  }
+
+  return doujin;
+};

@@ -1,18 +1,16 @@
 import {
   Center,
   Grid,
+  Group,
+  Image,
   Loader,
   Stack,
-  Title,
-  Image,
-  Group,
-  ThemeIcon,
   Text,
-  Button,
-  ActionIcon,
+  ThemeIcon,
+  Title,
 } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
-import { IconExternalLink, IconHash } from '@tabler/icons';
+import { IconHash } from '@tabler/icons';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { BadgeGroup } from '../../components/BadgeGroup';
