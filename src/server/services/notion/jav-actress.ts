@@ -1,23 +1,24 @@
 import { isFullPage } from '@notionhq/client';
-import { capitalize, select } from 'radash';
 import { env } from '../../../env/server.mjs';
 import { notion } from './client';
 
 interface SaveActress {
   slug: string;
   name: string;
-  thumbnail: string | null;
-  bio: string;
   japanese: string | null;
+  thumbnail: string | null;
+  source: string | null;
+
+  birthdate: string | null;
   height: number | null;
   waist: number | null;
   hip: number | null;
   bust: number | null;
-  categories: { name: string }[];
-  cup: { name: string } | null;
-  twitter: string | null;
-  instagram: string | null;
-  birthdate: string | null;
+  cup?: { name: string } | null;
+
+  twitter?: string;
+  instagram?: string;
+  bio?: string;
 }
 
 class NotionJavActress {
@@ -56,22 +57,18 @@ class NotionJavActress {
       }),
       properties: {
         Slug: { rich_text: [{ text: { content: actress.slug } }] },
+        Source: { url: actress.source || null },
         Name: { title: [{ text: { content: actress.name } }] },
         Japanese: {
           rich_text: [{ text: { content: actress.japanese || '' } }],
+        },
+        Cup: {
+          select: actress.cup ? { name: actress.cup.name } : null,
         },
         Height: { number: actress.height || null },
         Waist: { number: actress.waist || null },
         Hip: { number: actress.hip || null },
         Bust: { number: actress.bust || null },
-        Cup: { select: actress.cup ? actress.cup : null },
-        Categories: {
-          multi_select: select(
-            actress.categories,
-            (v) => ({ name: capitalize(v.name) }),
-            (v) => !!v.name
-          ),
-        },
         Birthdate: {
           date: actress.birthdate ? { start: actress.birthdate } : null,
         },

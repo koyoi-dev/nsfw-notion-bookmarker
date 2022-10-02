@@ -1,35 +1,31 @@
 import axios from 'axios';
+import { load } from 'cheerio';
+import { unique } from 'radash';
 import { z } from 'zod';
-import { env } from '../../env/server.mjs';
-import { BASE_URL, JavActressSchema } from '../../schema/jav-actress.schema';
+import {
+  JavActress,
+  JavActressDetail,
+  javActressDetailSchema,
+  javActressSchema,
+} from '../../schema/jav-actress.schema';
 import { notionJavActress } from '../services/notion/jav-actress';
 import { createRouter } from './context';
-
-const fetcher = axios.create({
-  baseURL: BASE_URL,
-});
 
 export const javActressRouter = createRouter()
   .query('search', {
     input: z.object({
       query: z.string(),
       cursor: z.number().min(1).default(1),
-      limit: z.number().min(1).max(15).default(15),
     }),
-    async resolve({ input: { query, cursor, limit } }) {
-      const { data: actresses, meta } = await getAllActress({
-        limit,
-        query,
-        page: cursor,
-      });
-
+    async resolve({ input: { query, cursor } }) {
+      const { result, hasNextPage } = await searchActress(query, cursor);
       let nextCursor: typeof cursor | undefined = undefined;
-      if (meta.filter_count > cursor * limit) {
+      if (hasNextPage) {
         nextCursor = cursor + 1;
       }
 
       return {
-        results: actresses,
+        result,
         nextCursor,
       };
     },
@@ -58,19 +54,15 @@ export const javActressRouter = createRouter()
 
       const notionActress = await notionJavActress.save({
         slug: actress.slug,
+        source: actress.source,
         name: actress.name,
         japanese: actress.japanese,
         thumbnail: actress.thumbnail,
-        bio: actress.bio || '',
         birthdate: actress.birthdate || '',
         height: actress.height,
-        cup: actress.cup ? { name: actress.cup } : null,
         bust: actress.bust,
         waist: actress.waist,
         hip: actress.hip,
-        categories: (actress.categories ?? []).map((v) => ({ name: v })),
-        instagram: actress.instagram?.url || null,
-        twitter: actress.twitter?.url || null,
       });
 
       return {
@@ -79,52 +71,185 @@ export const javActressRouter = createRouter()
     },
   });
 
-const getAllActress = async ({
-  limit,
-  page,
-  query,
-}: {
-  limit: number;
-  query: string;
-  page: number;
-}) => {
-  const { data: directus } = await fetcher.get('items/actresses', {
-    params: {
-      limit,
-      meta: 'filter_count',
-      offset: limit * (page - 1),
-      sort: ['name'],
-      fields: ['slug', 'name', 'japanese', 'thumbnail'],
-      ...(query && {
-        filter: {
-          _or: [
-            { name: { _contains: query } },
-            { japanese: { _contains: query } },
-          ],
-        },
-      }),
-    },
-  });
+const searchActress = async (
+  query: string,
+  page: number
+): Promise<{
+  result: JavActress[];
+  hasNextPage: boolean;
+}> => {
+  const { data: rawHtml } = await axios.get(
+    `https://jav.link/model_listing.html?fullname_keyword=${query}&page=${page}`
+  );
+
+  const $ = load(rawHtml);
+
+  const totalPages = parseInt(
+    $('ul.pagination').find('li.page-item').last().prev().text(),
+    10
+  );
+
+  // loop over all pages and map the results to an array of one level
+  const scrapped = $('div.col-sm-12.col-md-6.col-lg-4')
+    .find('a.pxp-agents-1-item')
+    .map((_, el) => {
+      const $el = $(el);
+      const path = $el.attr('href');
+      if (!path) {
+        return;
+      }
+
+      const slug = path.replace('/jav/', '').replace(/\//g, '');
+      const japanese = $el
+        .find('div.pxp-agents-1-item-details')
+        .find('div.pxp-agents-1-item-details-name:nth-child(1)')
+        .text()
+        .trim();
+      const name = $el
+        .find('div.pxp-agents-1-item-details')
+        .find('div.pxp-agents-1-item-details-name:nth-child(2)')
+        .text()
+        .trim();
+      const source = `https://jav.link${path}`;
+      const thumbnail = $el
+        .find('div.pxp-cover')
+        .css('background-image')!
+        .replace('url(', '')
+        .replace(')', '')
+        .replace(/"/g, '');
+
+      return {
+        slug,
+        name,
+        japanese,
+        thumbnail,
+        source,
+      };
+    })
+    .get();
 
   return z
     .object({
-      data: z.array(
-        JavActressSchema.pick({
-          slug: true,
-          name: true,
-          japanese: true,
-          thumbnail: true,
-        })
-      ),
-      meta: z.object({
-        filter_count: z.number(),
-      }),
+      result: z.array(javActressSchema),
+      hasNextPage: z.boolean(),
     })
-    .parse({ ...directus });
+    .parse({
+      result: unique(scrapped, (o) => o.slug),
+      hasNextPage: page < totalPages,
+    });
 };
 
-const getActress = async (slug: string) => {
-  const { data: directus } = await fetcher.get(`items/actresses/${slug}`);
+const getActress = async (slug: string): Promise<JavActressDetail> => {
+  const source = `https://jav.link/jav/${slug}/`;
+  const { data: html } = await axios.get(source);
 
-  return JavActressSchema.parse(directus.data);
+  const $ = load(html);
+
+  const [name, japanese] = z.tuple([z.string(), z.string()]).parse(
+    $('h1.pxp-page-header')
+      .text()
+      .trim()
+      .split('-')
+      .map((s) => s.trim()),
+    {
+      path: ['header'],
+    }
+  );
+
+  const rawThumbnail = $(
+    'div.col-sm-12.offset-lg-1.col-lg-3.col-md-6 > div'
+  ).css('background-image');
+  const thumbnail = javActressSchema.shape.thumbnail.parse(
+    rawThumbnail ? rawThumbnail.replace('url(', '').replace(')', '') : null,
+    {
+      path: ['thumbnail'],
+    }
+  );
+  const height = javActressDetailSchema.shape.height.parse(
+    $('div.pxp-sp-amenities-item:contains("Height")')
+      .text()
+      .trim()
+      .match(/\d+/)?.[0],
+    {
+      path: ['height'],
+    }
+  );
+  const bust = javActressDetailSchema.shape.bust.parse(
+    $('div.pxp-sp-amenities-item:contains("Breast")')
+      .text()
+      .trim()
+      .match(/\d+/)?.[0],
+    {
+      path: ['bust'],
+    }
+  );
+  const waist = javActressDetailSchema.shape.waist.parse(
+    $('div.pxp-sp-amenities-item:contains("Waist")')
+      .text()
+      .trim()
+      .match(/\d+/)?.[0],
+    {
+      path: ['waist'],
+    }
+  );
+  const hip = javActressDetailSchema.shape.hip.parse(
+    $('div.pxp-sp-amenities-item:contains("Hip")')
+      .text()
+      .trim()
+      .match(/\d+/)?.[0],
+    {
+      path: ['waist'],
+    }
+  );
+
+  const birthdate = javActressDetailSchema.shape.birthdate.parse(
+    $('div.pxp-single-property-section.mt-4.mt-md-5 > div')
+      .find(`div.pxp-sp-amenities-item:contains("Born")`)
+      .text()
+      .trim()
+      .match(/\d{2}\/\d{2}\/\d{4}/)?.[0],
+    {
+      path: ['birthdate'],
+    }
+  );
+
+  const blood_type = javActressDetailSchema.shape.blood_type.parse(
+    $('div.pxp-single-property-section.mt-4.mt-md-5 > div')
+      .find(`div.pxp-sp-amenities-item:contains("Born")`)
+      .text()
+      .trim()
+      .match(/A|B|AB|O/)?.[0],
+    {
+      path: ['blood_type'],
+    }
+  );
+
+  const rawCategories = $(
+    'div.pxp-sp-amenities-item:contains("Model\'s Style")'
+  )
+    .find('a')
+    .map((_, el) => $(el).text().trim())
+    .get();
+
+  const categories = javActressDetailSchema.shape.categories.parse(
+    rawCategories,
+    {
+      path: ['categories'],
+    }
+  );
+
+  return {
+    slug: slug,
+    name: name,
+    japanese: japanese,
+    thumbnail: thumbnail,
+    source: source,
+    birthdate,
+    blood_type,
+    height,
+    bust,
+    waist,
+    hip,
+    categories,
+  };
 };

@@ -6,17 +6,16 @@ import {
   Loader,
   Stack,
   Text,
-  ThemeIcon,
   Title,
 } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
-import { IconBrandInstagram, IconBrandTwitter } from '@tabler/icons';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { BadgeLink } from '../../components/BadgeLink';
+import { BadgeGroup } from '../../components/BadgeGroup';
 import Layout from '../../components/Layout';
 import { NotionButton } from '../../components/NotionButton';
 import { SectionStack } from '../../components/SectionStack';
+import { SourceButton } from '../../components/SourceButton';
 import dayjs from '../../utils/dayjs';
 import { trpc } from '../../utils/trpc';
 
@@ -71,12 +70,10 @@ export default function JavActressPage() {
             <Center>
               <Stack>
                 <Image
-                  src={`${actress.thumbnail}?fit=cover&width=215&height=300&quality=100`}
+                  src={actress.thumbnail || undefined}
                   alt={actress.name}
-                  imageProps={{
-                    loading: 'lazy',
-                  }}
                   radius='md'
+                  width={215}
                 />
                 {actress.notion ? (
                   <NotionButton
@@ -91,6 +88,8 @@ export default function JavActressPage() {
                     loading={isSaving}
                   />
                 )}
+
+                <SourceButton source={actress.source || '#'} />
               </Stack>
             </Center>
           </Grid.Col>
@@ -102,34 +101,6 @@ export default function JavActressPage() {
                 ({actress.japanese})
               </Text>
             </Title>
-            <Group>
-              <Group spacing='xs'>
-                <ThemeIcon color='cyan'>
-                  <IconBrandTwitter size={20} />
-                </ThemeIcon>
-                <Text
-                  component='a'
-                  inline
-                  weight={700}
-                  href={actress.twitter?.url}
-                >
-                  {actress.twitter?.username}
-                </Text>
-              </Group>
-              <Group spacing='xs'>
-                <ThemeIcon color='pink'>
-                  <IconBrandInstagram size={20} />
-                </ThemeIcon>
-                <Text
-                  component='a'
-                  inline
-                  weight={700}
-                  href={actress.twitter?.url}
-                >
-                  {actress.instagram?.username}
-                </Text>
-              </Group>
-            </Group>
             {/* More details */}
             <Stack mt='md'>
               {/* TOP */}
@@ -149,11 +120,6 @@ export default function JavActressPage() {
                   <SectionStack.Children title='Hip'>
                     <Text inline>{actress.hip}</Text>
                   </SectionStack.Children>
-                  <SectionStack.Children title='Cup'>
-                    <Text inline weight={700}>
-                      {actress.cup}
-                    </Text>
-                  </SectionStack.Children>
                 </Group>
 
                 <Group spacing='lg'>
@@ -168,25 +134,16 @@ export default function JavActressPage() {
                     <Text inline>{actress.blood_type}</Text>
                   </SectionStack.Children>
                 </Group>
-
-                {actress.bio && (
-                  <SectionStack.Children title='Bio'>
-                    <Text size='md'>
-                      {actress.bio.replace(/\sTwitter.*$/, '')}
-                    </Text>
-                  </SectionStack.Children>
-                )}
               </SectionStack>
 
               <SectionStack title='Extra Info'>
                 <SectionStack.Children title='Categories (javlink)'>
-                  <Group spacing='xs'>
-                    {(actress.categories ?? []).map((category) => (
-                      <BadgeLink key={category} url='#'>
-                        {category}
-                      </BadgeLink>
-                    ))}
-                  </Group>
+                  <BadgeGroup
+                    badges={(actress.categories || []).map((category, i) => ({
+                      id: i,
+                      name: category,
+                    }))}
+                  />
                 </SectionStack.Children>
               </SectionStack>
             </Stack>

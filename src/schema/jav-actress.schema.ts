@@ -1,58 +1,57 @@
+import dayjs from 'dayjs';
 import { z } from 'zod';
-import dayjs from '../utils/dayjs';
 
-export const BASE_URL = 'https://vje2ck1u.directus.app';
-
-const TwitterSchema = z
-  .string()
-  .url()
-  .transform((val) => {
-    return {
-      url: val,
-      username: new URL(val).pathname.replaceAll('/', ''),
-    };
-  })
-  .nullable();
-
-const InstagramSchema = z
-  .string()
-  .url()
-  .transform((val) => {
-    return {
-      url: val,
-      username: new URL(val).pathname.replaceAll('/', ''),
-    };
-  })
-  .nullable();
-
-export const JavActressSchema = z.object({
+export const javActressSchema = z.object({
   slug: z.string(),
   name: z.string(),
-  japanese: z.string(),
-  bio: z.string().nullable(),
-  height: z.number().nullable(),
-  waist: z.number().nullable(),
-  hip: z.number().nullable(),
-  bust: z.number().nullable(),
-  categories: z.array(z.string()).nullable(),
+  japanese: z.string().nullable(),
+  thumbnail: z.string().nullable(),
+  source: z.string().nullable(),
+});
+export type JavActress = z.infer<typeof javActressSchema>;
+
+export const javActressDetailSchema = javActressSchema.extend({
   birthdate: z
     .string()
-    .transform((val) => {
-      if (dayjs(val, 'YYYY-MM-DD', true).isValid()) {
-        return val;
+    .transform((val) =>
+      dayjs(val, 'MM/DD/YYYY', true).isValid()
+        ? dayjs(val).format('YYYY-MM-DD')
+        : null
+    )
+    .nullable(),
+  height: z
+    .preprocess((arg) => {
+      if (typeof arg === 'string') {
+        return parseInt(arg, 10);
       }
       return null;
-    })
+    }, z.number())
     .nullable(),
+  bust: z
+    .preprocess((arg) => {
+      if (typeof arg === 'string') {
+        return parseInt(arg, 10);
+      }
+      return null;
+    }, z.number())
+    .nullable(),
+  waist: z
+    .preprocess((arg) => {
+      if (typeof arg === 'string') {
+        return parseInt(arg, 10);
+      }
+      return null;
+    }, z.number())
+    .nullable(),
+  hip: z
+    .preprocess((arg) => {
+      if (typeof arg === 'string') {
+        return parseInt(arg, 10);
+      }
+      return null;
+    }, z.number())
+    .nullable(),
+  categories: z.array(z.string()),
   blood_type: z.string().nullable(),
-  thumbnail: z
-    .string()
-    .uuid()
-    .transform((val) => `${BASE_URL}/assets/${val}`)
-    .refine((val) => val.startsWith(`${BASE_URL}/assets/`))
-    .nullable(),
-  twitter: TwitterSchema,
-  instagram: InstagramSchema,
-  cup: z.string().nullable(),
 });
-export type JavActress = z.infer<typeof JavActressSchema>;
+export type JavActressDetail = z.infer<typeof javActressDetailSchema>;

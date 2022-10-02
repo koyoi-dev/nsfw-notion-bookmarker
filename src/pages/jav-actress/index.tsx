@@ -1,34 +1,25 @@
 import { Button, Image, Paper, Text, Title } from '@mantine/core';
-import { useDebouncedValue } from '@mantine/hooks';
+import { useForm } from '@mantine/form';
 import { NextLink } from '@mantine/next';
-import { queryTypes, useQueryState } from 'next-usequerystate';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { Fragment } from 'react';
 import Layout from '../../components/Layout';
 import { ResponsiveGrid } from '../../components/ResponsiveGrid';
 import { SearchBox } from '../../components/SearchBox';
 import { trpc } from '../../utils/trpc';
 
-const useJavActressQuery = () => {
-  const [query, setQuery] = useQueryState(
-    'search',
-    queryTypes.string.withDefault('')
-  );
-  const [debounced] = useDebouncedValue(query, 800);
-
-  return {
-    query,
-    setQuery,
-    debounced,
-  };
-};
-
 export default function JavActressesPage() {
-  const {
-    query: search,
-    setQuery: setSearch,
-    debounced,
-  } = useJavActressQuery();
+  const router = useRouter();
+  const form = useForm({
+    initialValues: {
+      search: (router.query.search as string) || '',
+    },
+
+    validate: {
+      search: (value) => (value.length < 1 ? 'Search is required' : null),
+    },
+  });
 
   const {
     isLoading,
@@ -37,10 +28,29 @@ export default function JavActressesPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = trpc.useInfiniteQuery(['jav-actress.search', { query: debounced }], {
-    enabled: !!debounced,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-  });
+    refetch,
+  } = trpc.useInfiniteQuery(
+    ['jav-actress.search', { query: form.values.search }],
+    {
+      enabled: false,
+      refetchOnWindowFocus: false,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    }
+  );
+
+  const handleSubmit = async (value: typeof form.values) => {
+    refetch();
+    router.push(
+      {
+        pathname: router.pathname,
+        query: {
+          search: value.search,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   return (
     <Layout>
@@ -51,23 +61,25 @@ export default function JavActressesPage() {
         jav-actress
       </Title>
 
-      <SearchBox
-        defaultValue={search}
-        onChange={(event) => setSearch(event.currentTarget.value)}
-      />
+      <form onSubmit={form.onSubmit(handleSubmit)}>
+        <SearchBox {...form.getInputProps('search')} />
+        <Button mt='md' type='submit'>
+          Submit query
+        </Button>
+      </form>
 
       <ResponsiveGrid mt='xl' skeleton={isLoading}>
         {isSuccess &&
-          data.pages.map((page, i) => (
-            <Fragment key={i}>
-              {page.results.map((actress) => (
+          data.pages.map((page) => (
+            <Fragment key={page.nextCursor}>
+              {page.result.map((actress) => (
                 <Paper
                   key={actress.slug}
                   component={NextLink}
                   href={`/jav-actress/${actress.slug}`}
                 >
                   <Image
-                    src={`${actress.thumbnail}?fit=cover&width=200&height=300&quality=100`}
+                    src={actress.thumbnail || undefined}
                     alt={actress.name}
                     imageProps={{
                       loading: 'lazy',
