@@ -1,9 +1,37 @@
 import { z } from 'zod';
 
+export const hanimeIDSchema = z
+  .union([z.string(), z.number()])
+  .transform((value, ctx) => {
+    const parsed = parseInt(value.toString());
+    if (isNaN(parsed)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Not a number',
+      });
+
+      return z.NEVER;
+    }
+
+    return parsed;
+  });
+export type HanimeID = z.infer<typeof hanimeIDSchema>;
+
 const hanimeHentaiSchema = z.object({
-  id: z.number(),
+  id: hanimeIDSchema,
   name: z.string(),
+  slug: z.string(),
   cover_url: z.string().url(),
+});
+
+const hanimeTagSchema = z.object({
+  id: hanimeIDSchema,
+  text: z.string(),
+});
+
+const hanimeBrandSchmea = z.object({
+  id: hanimeIDSchema,
+  title: z.string(),
 });
 
 export const hanimeSearchResponseSchema = z.object({
@@ -12,4 +40,10 @@ export const hanimeSearchResponseSchema = z.object({
     (arg) => JSON.parse(arg as string),
     z.array(hanimeHentaiSchema)
   ),
+});
+
+export const hanimeGetResponseSchema = z.object({
+  hentai_video: hanimeHentaiSchema,
+  hentai_tags: z.array(hanimeTagSchema),
+  brand: hanimeBrandSchmea,
 });

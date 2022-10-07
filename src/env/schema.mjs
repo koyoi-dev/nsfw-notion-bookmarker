@@ -14,6 +14,9 @@ export const serverSchema = z.object({
   NOTION_JAVACTRESS_DATABASE_ID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: 'Alphanumeric characters only' }),
+  NOTION_HANIME_DATABASE_ID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: 'Alphanumeric characters only' }),
 });
 
 /**
