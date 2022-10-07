@@ -111,12 +111,14 @@ const searchActress = async (
         .text()
         .trim();
       const source = `https://jav.link${path}`;
-      const thumbnail = $el
-        .find('div.pxp-cover')
-        .css('background-image')!
-        .replace('url(', '')
-        .replace(')', '')
-        .replace(/"/g, '');
+
+      let thumbnail = $el.find('div.pxp-cover').css('background-image');
+      if (thumbnail) {
+        thumbnail = thumbnail
+          .replace('url(', '')
+          .replace(')', '')
+          .replace(/"/g, '');
+      }
 
       return {
         slug,
