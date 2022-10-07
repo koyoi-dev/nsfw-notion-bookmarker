@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { select } from 'radash';
 import { z } from 'zod';
-import { env } from '../../env/server.mjs';
 import {
   Doujin,
   doujinIdSchema,
@@ -101,7 +100,7 @@ export const nhentaiRouter = createRouter()
         source: doujin.source,
       });
 
-      return notion;
+      return { notion };
     },
   });
 

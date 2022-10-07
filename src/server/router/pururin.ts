@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { z } from 'zod';
-import { env } from '../../env/server.mjs';
 import {
   pururinGetResponseSchema,
   PururinId,
